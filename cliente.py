@@ -19,13 +19,12 @@ with open('received_file', 'wb') as f:
         print('receiving data...')
         data = s.recv(int(TMQ))
         print('data=%s', (data))
-        if not data:
+        if not data or data == 'EOF':
             break
         # write data to a file
         f.write(data)
 
 f.close()
-
 print('Successfully get the file')
 s.close()
 print('connection closed')

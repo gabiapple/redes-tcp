@@ -27,8 +27,10 @@ while True:
        conn.send(l)
        print('Sent ',repr(l))
        l = f.read(int(TMQ))
+    
     f.close()
-
+    conn.send('EOF')
+    
     print('Done sending')
     conn.send('Thank you for connecting')
     conn.close()
