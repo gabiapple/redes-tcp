@@ -4,19 +4,17 @@ import binascii
 from python_arptable import *
 
 def stringToBin(msg):
-    print msg
     data_binary = bin(int(binascii.hexlify(msg),16)).split('b')
-    print data_binary
     return data_binary
 
 def criaFrame(msg):
     preambulo = '10101010101010101010101010101010101010101010101010101010'
     start_frame = '10101011'
-    mac_orig = ''.join(get_arp_table()[0]['HW address'].split(':'))
-    mac_dest = ''.join(get_arp_table()[0]['HW address'].split(':'))
+    mac_orig = stringToBin(''.join(get_arp_table()[0]['HW address'].split(':')))
+    mac_dest = stringToBin(''.join(get_arp_table()[0]['HW address'].split(':')))
     tipo = '0000000011111111'
     frame = ""
-    frame += preambulo + '|' + start_frame + '|' + mac_orig + '|' + mac_dest + '|' + tipo + '|' + msg[1]
+    frame += preambulo + '|' + start_frame + '|' + mac_orig[1] + '|' + mac_dest[1] + '|' + tipo + '|' + msg[1]
     return frame
 
 def recebeMensagem():
