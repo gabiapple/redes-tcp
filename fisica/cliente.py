@@ -1,4 +1,5 @@
 import socket                   # Import socket module
+from python_arptable import *
 
 s = socket.socket()             # Create a socket object
 host = socket.gethostname()     # Get local machine name
