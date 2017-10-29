@@ -18,7 +18,7 @@ A camada física foi implementada na linguagem Python 2.7.
 $ sudo apt-get install python-pip
 ```
 
-E por meio do pip, instalaremos a biblioteca python_arptable, por meio do pip:
+E por meio do pip, instalaremos a biblioteca python_arptable:
 ```
 $ sudo pip install python_arptable
 ```
