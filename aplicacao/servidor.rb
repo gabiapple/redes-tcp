@@ -2,19 +2,17 @@
 require 'socket'
 server = TCPServer.new 10006
 
+begin
+	displayfile = File.open("index.html", 'r')
+	content = displayfile.read()
+end
+
 loop{
 	session = server.accept
 	puts "server.accept"
-	while request = ''
-		request = session.gets
-	end
+	request = session.recv(1024)
 	puts "request: " + request
-	session.close
-
-	#sleep(0.1)
 	print "here"
-	session = server.accept
-	session.print("Hello world! The time is #{Time.now}") # 1
+	session.print(content) # 1
 	session.close
-	break;
 }
