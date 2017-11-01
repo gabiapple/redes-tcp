@@ -15,7 +15,7 @@ def criaFrame(msg):
     mac_dest = stringToBin(''.join(get_arp_table()[0]['HW address'].split(':')))
     tipo = '0000000011111111'
     frame = ""
-    frame += preambulo + '\n' + start_frame + '\n' + mac_orig[1] + '\n' + mac_dest[1] + '\n' + tipo + '\n' + msg[1]
+    frame += preambulo + '\n' + start_frame + '\n' + mac_orig[1] + '\n' + mac_dest[1] + '\n' + tipo + '\n' + msg[1] + '\n'
     return frame
 
 def recebeMensagem():
@@ -30,18 +30,21 @@ def binToString(data_binary):
     data_hex = binascii.unhexlify('%x' %n)
     return data_hex
 
-# Comunicacao camada superior -> fisica -> servidor fisica
-with open('log_c.txt', 'a') as g:
-    g.write('Arquivo aberto [' + str(datetime.datetime.now()) + ']' + '\n')
+# configurando socket para ouvir camada superior 
+port_superior = 10000                  # Reserve a port for your service.
+s_superior = socket.socket()             # Create a socket object
+host = 'localhost'     # Get local machine name
+                
+    
+s_superior.bind((host, port_superior))            # Bind to the port
+s_superior.listen(5)                     # Escutando camada superior.
    
-    # configurando socket para ouvir camada superior 
-    port_superior = 10000                  # Reserve a port for your service.
-    s_superior = socket.socket()             # Create a socket object
-    host = 'localhost'     # Get local machine name
-       
-    s_superior.bind((host, port_superior))            # Bind to the port
-    s_superior.listen(5)                     # Esperando camada superior.
-            
+
+while True:
+    # Comunicacao camada superior -> fisica -> servidor fisica
+    g = open('log_c.txt', 'a')
+ #   g.write('Arquivo aberto [' + str(datetime.datetime.now()) + ']' + '\n')
+   
     g.write('Esperando conexao com a camada superior [' + str(datetime.datetime.now()) + ']' + '\n')
        
     # estabelece conexao com camada superior
@@ -56,9 +59,11 @@ with open('log_c.txt', 'a') as g:
 
     # cria Frame Ethernet
     frame = criaFrame(msg_bin)
-    with open('frameEnvio.txt', 'a') as f:
+    with open('frameEnvio.txt', 'w') as f:
         print 'file opened'
         f.write(frame)
+        f.write('')
+    f.close()
 
     # configurando socket para enviar mensagem para o servidor da fisica
     s = socket.socket()             # Create a socket object
@@ -70,7 +75,6 @@ with open('log_c.txt', 'a') as g:
     g.write('Estabelece conexao com Servidor da Fisica [' + str(datetime.datetime.now()) + ']' + '\n')
 
     # Pergunta TMQ
-
     s.send('TMQ?')
     g.write('Pergunta TMQ [' + str(datetime.datetime.now()) + ']' + '\n')
     print 'recebendo TMQ'
@@ -88,75 +92,39 @@ with open('log_c.txt', 'a') as g:
         l = file.read(int(TMQ))
     g.write('Arquivo enviado [' + str(datetime.datetime.now()) + ']' + '\n')
     print('Arquivo enviado')
-    s.close()
-    g.write('Conexao com Servidor da Fisca fechada [' + str(datetime.datetime.now()) + ']' + '\n')
-    print('Conexao fechada')
-#'''
 
-
-# Comunica servidor fisica -> cliente fisica -> camada superior
-with open('log_c.txt', 'a') as j:
-    # configura socket para esperar servidor da fisica se conectar
-    port = 10500                  # Reserve a port for your service.
-    s = socket.socket()             # Create a socket object
-    host = socket.gethostname()     # Get local machine name
-    s.bind((host, port))            # Bind to the port
-    s.listen(5)                     # Now wait for client connection.
-    j.write('Esperando conexao [' + str(datetime.datetime.now()) + ']' + '\n')
-    TMQ = '1024'
-
-
-    print 'Server listening....'
+    # Envia TMQ para servidor da fisica
+    message = s.recv(10)
+    s.send(TMQ)
+    g.write('Enviou TMQ [' + str(datetime.datetime.now()) + ']' + '\n')
+    frame = ""
+    
+    # Recebendo resposta do servidor
     while True:
-        conn, addr = s.accept()     # Establish connection with client.
-        j.write('Estabeleceu conexao com servidor da fisica' + str(addr) + '[' + str(datetime.datetime.now()) + ']' + '\n')
-        # simulando envio de Quadro Ethernet (como se fosse da camada superior)
-        print 'Estabeleceu conexao com', addr
-        message = conn.recv(10)
-        conn.send(TMQ)
-        j.write('Enviou TMQ [' + str(datetime.datetime.now()) + ']' + '\n')
-        frame = ""
-        
-        while True:
-            print('recebendo dados...')
-            part = conn.recv(int(TMQ))
-            j.write('Recebeu dados [' + str(datetime.datetime.now()) + ']' + '\n')
-            frame += part
-           # print('part=%s', (part))
-            if not part or part == '':
-                break
-            # write data to a file
-            #f.write(data)
-        conn.close()
-        j.write('Conexao encerrada [' + str(datetime.datetime.now()) + ']' + '\n\n')
-        print ("Conexao encerrada do servidor se comunicando com cliente")
+        print('recebendo dados...')
+        part = s.recv(int(TMQ))
+        g.write('Recebeu dados [' + str(datetime.datetime.now()) + ']' + '\n')
+        frame += part
+        if not part or part == '':
+            break
+    g.write('Quadro recebido [' + str(datetime.datetime.now()) + ']' + '\n')
+    print('Recebido frame com sucesso')
 
-        j.write('Quadro recebido [' + str(datetime.datetime.now()) + ']' + '\n')
-    #f.close()
-        print('Recebido frame com sucesso')
+    s.close()
+    g.write('Conexao com Servidor da Fisica encerrada [' + str(datetime.datetime.now()) + ']' + '\n\n')
+    print ("Conexao encerrada do servidor se comunicando com cliente")
 
-        # separar frame (PREAMBULO, START_DELIMITER, MAC_ORIG, MAC_DEST)
-        data = frame.split('\n')
-        msg_bin = data[5]
-        msg = binToString(msg_bin)
-        with open('rf.txt', 'wb') as f:
-            f.write(msg)
-           # print msg
+   
+    # separar frame (PREAMBULO, START_DELIMITER, MAC_ORIG, MAC_DEST)
+    data = frame.split('\n')
+    msg_bin = data[5]
+    msg = binToString(msg_bin)
+    with open('rf.txt', 'wb') as f:
+        f.write(msg)
+       # print msg
 
-        # configurando socket para se comunicar com a camada superior 
-        port_superior = 10000                  # Reserve a port for your service.
-        s_superior = socket.socket()             # Create a socket object
-        host = 'localhost'     # Get local machine name
-                      
-        j.write('Esperando conexao com a camada superior [' + str(datetime.datetime.now()) + ']' + '\n')
-           
-        # estabelece conexao com camada superior
-        s_superior.connect((host, port))
-        g.write('Estabelece conexao com camada superior [' + str(datetime.datetime.now()) + ']' + '\n')
-  
-        # envia mensagem para camada superior
-        s_superior.send(msg)
+    # envia mensagem para camada superior
+    conn_superior.send(msg)
 
-        break;
-j.close()
-print("cliente")
+    g.close()
+    
