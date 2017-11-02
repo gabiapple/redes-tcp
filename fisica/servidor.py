@@ -11,7 +11,21 @@ def stringToBin(msg):
     data_binary = bin(int(binascii.hexlify(msg),16)).split('b')
     return data_binary
 
+
+def binToString(data_binary):
+    n = int(data_binary,2)
+    data_hex = binascii.unhexlify('%x' %n)
+    return data_hex
+
+def exibePDU(pdu):
+    print "Preambulo: " + str(int(pdu[0],2))
+    print "Start_frame: " +  str(int(pdu[1],2))
+    print "MAC ORIGEM: " +  binToString(pdu[2])
+    print "MAC DESTINO: " +  binToString(pdu[3])
+    print "TIPO: " +  str(int(pdu[4],2))
+
 def criaFrame(msg):
+    print "Gerando PDU da camada fisica"
     preambulo = '10101010101010101010101010101010101010101010101010101010'
     start_frame = '10101011'
     mac_orig = stringToBin(''.join(get_arp_table()[0]['HW address'].split(':')))
@@ -19,6 +33,7 @@ def criaFrame(msg):
     tipo = '0000000011111111'
     frame = ""
     frame += preambulo + '\n' + start_frame + '\n' + mac_orig[1] + '\n' + mac_dest[1] + '\n' + tipo + '\n' + msg[1]
+    exibePDU(frame.split('\n'))
     return frame
 
 def recebeMensagem():
@@ -27,12 +42,6 @@ def recebeMensagem():
     msg = f.read()
     f.close()
     return msg
-
-
-def binToString(data_binary):
-    n = int(data_binary,2)
-    data_hex = binascii.unhexlify('%x' %n)
-    return data_hex
 
 port = 10200                 # Reserve a port for your service.
 s = socket.socket()             # Create a socket object
@@ -73,6 +82,11 @@ while True:
 
     # separar frame (PREAMBULO, START_DELIMITER, MAC_ORIG, MAC_DEST)
     data = frame.split('\n')
+
+    # exibir PDU
+    print "Processando PDU da camada Fisica"
+    exibePDU(data[:5])
+
     msg_bin = data[5]
     msg = binToString(msg_bin)
     print msg
@@ -93,6 +107,7 @@ while True:
 
     # recebe resposta
     msg = server.recv(1024)
+    print 'Resposta do servidor de app: ' + msg
     j.write('Recebeu resposta do servidor da camada superior [' + str(datetime.datetime.now()) + ']' + '\n\n')
     server.close()
     j.write('Conexao encerrada [' + str(datetime.datetime.now()) + ']' + '\n\n')
@@ -121,7 +136,6 @@ while True:
     while (l):
         conn.send(l)
         j.write('Envia quadro para servidor [' + str(datetime.datetime.now()) + ']' + '\n')
-        #print('Sent ',repr(l))
         l = f.read(int(TMQ))
     j.write('Arquivo enviado [' + str(datetime.datetime.now()) + ']' + '\n')
     conn.close()

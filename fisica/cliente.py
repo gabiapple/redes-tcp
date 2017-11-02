@@ -8,6 +8,18 @@ def stringToBin(msg):
     data_binary = bin(int(binascii.hexlify(msg),16)).split('b')
     return data_binary
 
+def binToString(data_binary):
+    n = int(data_binary,2)
+    data_hex = binascii.unhexlify('%x' %n)
+    return data_hex
+
+def exibePDU(pdu):
+    print "Preambulo: " + str(int(pdu[0],2))
+    print "Start_frame: " +  str(int(pdu[1],2))
+    print "MAC ORIGEM: " +  binToString(pdu[2])
+    print "MAC DESTINO: " +  binToString(pdu[3])
+    print "TIPO: " +  str(int(pdu[4],2))
+
 def criaFrame(msg):
     preambulo = '10101010101010101010101010101010101010101010101010101010'
     start_frame = '10101011'
@@ -16,6 +28,7 @@ def criaFrame(msg):
     tipo = '0000000011111111'
     frame = ""
     frame += preambulo + '\n' + start_frame + '\n' + mac_orig[1] + '\n' + mac_dest[1] + '\n' + tipo + '\n' + msg[1] + '\n'
+    exibePDU(frame.split('\n'))
     return frame
 
 def recebeMensagem():
@@ -24,11 +37,6 @@ def recebeMensagem():
     msg = f.read()
     f.close()
     return msg
-
-def binToString(data_binary):
-    n = int(data_binary,2)
-    data_hex = binascii.unhexlify('%x' %n)
-    return data_hex
 
 # configurando socket para ouvir camada superior 
 port_superior = 10000                  # Reserve a port for your service.
@@ -49,9 +57,9 @@ while True:
        
     # estabelece conexao com camada superior
     conn_superior, addr_superior = s_superior.accept()     # Establish connection with client.
-    g.write('Estabeleceu conexao com a camada superior' + str(addr_superior) + '[' + str(datetime.datetime.now()) + ']' + '\n')
+    g.write('Estabeleceu conexao com a camada superior ' + str(addr_superior) + '[' + str(datetime.datetime.now()) + ']' + '\n')
           
-    msg = conn_superior.recv(10) # recebendo mensagem da camada superior
+    msg = conn_superior.recv(40) # recebendo mensagem da camada superior
     print "msg da camada superior:" + msg
         
     # converte para binario
@@ -59,7 +67,7 @@ while True:
 
     # cria Frame Ethernet
     frame = criaFrame(msg_bin)
-    with open('frameEnvio.txt', 'w') as f:
+    with open('frameEnvio1.txt', 'w') as f:
         print 'file opened'
         f.write(frame)
         f.write('')
@@ -82,7 +90,7 @@ while True:
     g.write('Recebe TMQ [' + str(datetime.datetime.now()) + ']' + '\n')
 
     # Envia frame para servidor
-    filename = 'frameEnvio.txt'
+    filename = 'frameEnvio1.txt'
     file = open(filename,'rb')
     l = file.read(int(TMQ))
     while (l):
@@ -117,6 +125,11 @@ while True:
    
     # separar frame (PREAMBULO, START_DELIMITER, MAC_ORIG, MAC_DEST)
     data = frame.split('\n')
+
+    # exibir PDU
+    print "Processando PDU da camada Fisica"
+    exibePDU(data[:5])
+    
     msg_bin = data[5]
     msg = binToString(msg_bin)
     with open('rf.txt', 'wb') as f:
