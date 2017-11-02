@@ -8,22 +8,27 @@ end
 
 server = TCPServer.new 5678
 puts "esperando cliente abrir o browser"
-
-while session = server.accept # cliente abriu o browser
+loop{
+    session, addr = server.accept # cliente abriu o browser
+    log = File.open("log_cApp.txt", 'a')
+    log.write("Cliente abriu o browser:  #{addr} [ #{Time.now} ]\n")
     puts "cliente abriu o browser\n"
     request = session.gets
+    log.write("Recebeu requisicao do cliente:  #{addr} [ #{Time.now} ]\n")
     puts request + '\n'
     camada_inferior = TCPSocket.new('localhost', 10000)
+    log.write("Estabeleceu conexao com camada inferior [ #{addr} [ #{Time.now} ]\n")
     camada_inferior.print "#{request}"
+    log.write("Enviou solicitacao a camada inferior: [ #{addr} [ #{Time.now} ]\n")
+   
     # resposta
     msg = ""
     msg = camada_inferior.recv(1024)
+    log.write("Recebeu resposta da camada inferior: [ #{addr} [ #{Time.now} ]\n")
+    
     print msg
-    session.print "HTTP/1.1 200\r\n" # 1
-    session.print "Content-Type: text/html\r\n" # 2
-    session.print "\r\n" # 3
-   # session.print "Hello world! The time is #{Time.now}" #4
     camada_inferior.close
     session.print(msg)
+    log.close()
     session.close
-end
+}
