@@ -1,4 +1,7 @@
-# Referencia: https://blog.appsignal.com/2016/11/23/ruby-magic-building-a-30-line-http-server-in-ruby.html
+# Referencias
+# https://blog.appsignal.com/2016/11/23/ruby-magic-building-a-30-line-http-server-in-ruby.html
+# https://practicingruby.com/articles/implementing-an-http-file-server
+
 require 'socket'
 require 'time'
 server = TCPServer.new 10006
