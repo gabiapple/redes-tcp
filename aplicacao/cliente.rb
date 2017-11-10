@@ -1,12 +1,9 @@
 # Referencia: https://blog.appsignal.com/2016/11/23/ruby-magic-building-a-30-line-http-server-in-ruby.html
 
 require 'socket'
+require 'time'
 
-app = Proc.new do
-  ['200', {'Content-Type' => 'text/html'}, ["Hello world! The time is #{Time.now}"]]
-end
-
-server = TCPServer.new 5678
+server = TCPServer.new 8001
 puts "esperando cliente abrir o browser"
 loop{
     session = server.accept # cliente abriu o browser
