@@ -46,5 +46,21 @@ $ ruby servidor.rb
 ```
 $ ruby cliente.rb
 ```
+
+## Camada de Transporte
+A camada física foi implementada na linguagem php 5
+
+### Requisitos de instalação
+```
+$ sudo apt-get install php5-cli
+```
+### Execução
+Após os comandos acima já é possível executar o servidor e o cliente:
+```
+$ php servidor.php
+```
+```
+$ php cliente.php
+```
 Após executar o cliente e o servidor, o cliente escuta por requisições do browser.
 Quando um cliente abre httṕ://localhost:5678, a requisição é feita para o cliente.rb que passa a solicitação para a camada inferior, e assim sucessivamente até chegar no servidor.rb. O servidor.rb trata as solicitações HTTP, retornando o que foi pedido, caso o arquivo exista ou File not found, caso o arquivo não exista.
