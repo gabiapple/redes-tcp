@@ -48,7 +48,7 @@ $ ruby cliente.rb
 ```
 
 ## Camada de Transporte
-A camada física foi implementada na linguagem php 5
+A camada transporte foi implementada na linguagem php 5
 
 ### Requisitos de instalação
 ```
