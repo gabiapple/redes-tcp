@@ -1,5 +1,5 @@
 <?php
-    $host = "127.0.0.1";
+    $host = "localhost";
     $port1 = "10050";
     $aragorn = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
     $lim_bytes = 1000000000; //1 GB
