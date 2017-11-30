@@ -7,7 +7,8 @@
 - Samuel Cury
 
 ## Descrição
-Este repositório contém a implementação da Pilha de protocolos TCP/IP.
+Este repositório contém a implementação da Pilha de protocolos TCP/IP. 
+Para sua execução, uma máquina deve ser configurada como cliente e outra como servidor.
 
 ## Camada Física
 A camada física foi implementada na linguagem Python 2.7. 
@@ -25,11 +26,12 @@ $ sudo pip install python_arptable
 ### Execução
 Após os comandos acima já é possível executar o servidor.py e o cliente.py:
 ```
-$ python servidor.py
+$ python servidor.py [ip_servidor]
 ```
 ```
-$ python cliente.py
+$ python cliente.py [ip_servidor]
 ```
+Observe que é necessário passar como parâmetro qual o IP da máquina que atua como servidor.
 
 ## Camada de Aplicação
 A camada física foi implementada na linguagem Ruby 1.9.3
@@ -63,4 +65,4 @@ $ php servidor.php
 $ php cliente.php
 ```
 Após executar o cliente e o servidor, o cliente escuta por requisições do browser.
-Quando um cliente abre httṕ://localhost:5678, a requisição é feita para o cliente.rb que passa a solicitação para a camada inferior, e assim sucessivamente até chegar no servidor.rb. O servidor.rb trata as solicitações HTTP, retornando o que foi pedido, caso o arquivo exista ou File not found, caso o arquivo não exista.
+Quando um cliente abre httṕ://localhost:8001, a requisição é feita para o cliente.rb que passa a solicitação para a camada inferior, e assim sucessivamente até chegar no servidor.rb. O servidor.rb trata as solicitações HTTP, retornando o que foi pedido, caso o arquivo exista ou File not found, caso o arquivo não exista.
