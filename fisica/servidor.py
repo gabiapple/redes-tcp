@@ -8,6 +8,7 @@ import sys
 
 from python_arptable import get_arp_table
 from socket import timeout
+import fcntl, socket, struct
 
 def stringToBin(msg):
     data_binary = bin(int(binascii.hexlify(msg),16)).split('b')
@@ -21,24 +22,30 @@ def binToString(data_binary):
 def exibePDU(pdu):
     print "Preambulo: " + str(int(pdu[0],2))
     print "Start_frame: " +  str(int(pdu[1],2))
-    print "MAC ORIGEM: " +  binToString(pdu[2])
-    print "MAC DESTINO: " +  binToString(pdu[3])
+    print "MAC ORIGEM: " +  pdu[2]
+    print "MAC DESTINO: " +  pdu[3]
     print "TIPO: " +  str(int(pdu[4],2))
 
-def calculaMAC():
-    # https://github.com/LukeCSmith0/hyperspeed-tester/blob/master/Client-Script/execute_test_final.py
-    os.system("ping -c 2 " + host)
+# Referencias consultadas para achar MAC_ADRESS:
+# https://github.com/LukeCSmith0/hyperspeed-tester/blob/master/Client-Script/execute_test_final.py
+# https://stackoverflow.com/questions/159137/getting-mac-address
+def calculaMAC(ip):
+    if ip == 'localhost':
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        info = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', interface[:15]))
+        gateway_mac = ':'.join(['%02x' % ord(char) for char in info[18:24]])
+        return gateway_mac
+   
+    os.system("ping -c 2 " + ip)
     ##Import the contents of the ARP table for reading
     arp_table = get_arp_table()
-    print arp_table 
-    print '\n'
+    gateway_mac = '0'
     ##Loop through each ARP entry to check whether the gateway address is present
     for arp_entry in arp_table:
-        print arp_entry
-        if arp_entry["IP address"] ==  host:
+        if arp_entry['IP address'] ==  str(ip):
             ##Grab the MAC address associated with the gateway address
-            gateway_mac = arp_entry["HW address"]
-            print "here"
+            gateway_mac = str(arp_entry['HW address'])
+            print gateway_mac
             break;
 
     return gateway_mac
@@ -47,11 +54,11 @@ def criaFrame(msg):
     print "Gerando PDU da camada fisica"
     preambulo = '10101010101010101010101010101010101010101010101010101010'
     start_frame = '10101011'
-    mac_orig = stringToBin(''.join(get_arp_table()[0]['HW address'].split(':')))
-    mac_dest = stringToBin(''.join(get_arp_table()[0]['HW address'].split(':')))
+    mac_orig = calculaMAC('localhost') # MAC do servidor local
+    mac_dest = calculaMAC(ip_cliente) # MAC do cliente
     tipo = '0000000011111111'
     frame = ""
-    frame += preambulo + '\n' + start_frame + '\n' + mac_orig[1] + '\n' + mac_dest[1] + '\n' + tipo + '\n' + msg[1]
+    frame += preambulo + '\n' + start_frame + '\n' + mac_orig + '\n' + mac_dest + '\n' + tipo + '\n' + msg[1]
     exibePDU(frame.split('\n'))
     return frame
 
@@ -63,10 +70,13 @@ def recebeMensagem():
     return msg
 
 # recebendo ip do servidor
-if len(sys.argv) != 2:
-    print 'Uso: python ' + sys.argv[0] + ' [ip_servidor]'
+if len(sys.argv) != 4:
+    print 'Uso: python ' + sys.argv[0] + ' [interface] [ip_servidor] [ip_cliente]'
     sys.exit()
-host = sys.argv[1]     # Get local machine name
+
+interface = sys.argv[1]
+host = sys.argv[2]     # Get local machine name
+ip_cliente = sys.argv[3]
 
 # configurando socket para se comunicar com cliente
 port = 10200                 # Reserve a port for your service.
@@ -85,7 +95,7 @@ while True:
     print 'Server listening....'
 
     conn, addr = s.accept()     # Establish connection with client.
-    conn.settimeout(1.5)
+    conn.settimeout(1.0)
     j.write('Estabelece conexao com cliente da fisica [' + str(datetime.datetime.now()) + ']' + '\n')
 
     # Recebe Quadro Ethernet do cliente
