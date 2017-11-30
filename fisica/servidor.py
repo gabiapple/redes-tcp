@@ -3,14 +3,15 @@ import time
 import binascii
 import datetime
 import os
+import re
+import sys
+
+from python_arptable import get_arp_table
 from socket import timeout
-from python_arptable import *
-from time import sleep
 
 def stringToBin(msg):
     data_binary = bin(int(binascii.hexlify(msg),16)).split('b')
     return data_binary
-
 
 def binToString(data_binary):
     n = int(data_binary,2)
@@ -23,6 +24,24 @@ def exibePDU(pdu):
     print "MAC ORIGEM: " +  binToString(pdu[2])
     print "MAC DESTINO: " +  binToString(pdu[3])
     print "TIPO: " +  str(int(pdu[4],2))
+
+def calculaMAC():
+    # https://github.com/LukeCSmith0/hyperspeed-tester/blob/master/Client-Script/execute_test_final.py
+    os.system("ping -c 2 " + host)
+    ##Import the contents of the ARP table for reading
+    arp_table = get_arp_table()
+    print arp_table 
+    print '\n'
+    ##Loop through each ARP entry to check whether the gateway address is present
+    for arp_entry in arp_table:
+        print arp_entry
+        if arp_entry["IP address"] ==  host:
+            ##Grab the MAC address associated with the gateway address
+            gateway_mac = arp_entry["HW address"]
+            print "here"
+            break;
+
+    return gateway_mac
 
 def criaFrame(msg):
     print "Gerando PDU da camada fisica"
@@ -43,9 +62,15 @@ def recebeMensagem():
     f.close()
     return msg
 
+# recebendo ip do servidor
+if len(sys.argv) != 2:
+    print 'Uso: python ' + sys.argv[0] + ' [ip_servidor]'
+    sys.exit()
+host = sys.argv[1]     # Get local machine name
+
+# configurando socket para se comunicar com cliente
 port = 10200                 # Reserve a port for your service.
 s = socket.socket()             # Create a socket object
-host = socket.gethostname()     # Get local machine name
 s.bind((host, port))            # Bind to the port
 s.listen(5)                     # Now wait for client connection.
 
@@ -60,7 +85,7 @@ while True:
     print 'Server listening....'
 
     conn, addr = s.accept()     # Establish connection with client.
-    conn.settimeout(4)
+    conn.settimeout(1.5)
     j.write('Estabelece conexao com cliente da fisica [' + str(datetime.datetime.now()) + ']' + '\n')
 
     # Recebe Quadro Ethernet do cliente
@@ -93,11 +118,11 @@ while True:
 
     # configurando socket para conversar com o servidor da camada superior
     server = socket.socket()         # Create a socket object
-    host = socket.gethostname() # Get local machine name
-    port = 10006                # Reserve a port for your service.
+    host_superior = 'localhost' # Get local machine name
+    port_superior = 10050                # Reserve a port for your service.
  
     # estabelecendo conexao
-    server.connect((host, port))
+    server.connect((host_superior, port_superior))
     #print server.recv(1024)
     j.write('Estabeleceu conexao com servidor da camada superior: ' + str(addr) + '[' + str(datetime.datetime.now()) + ']' + '\n')
  

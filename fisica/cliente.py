@@ -2,6 +2,7 @@ import socket                   # Import socket module
 import os
 import binascii
 import datetime
+import sys
 from python_arptable import *
 
 def stringToBin(msg):
@@ -21,6 +22,7 @@ def exibePDU(pdu):
     print "TIPO: " +  str(int(pdu[4],2))
 
 def criaFrame(msg):
+    print "Gerando PDU da camada fisica"
     preambulo = '10101010101010101010101010101010101010101010101010101010'
     start_frame = '10101011'
     mac_orig = stringToBin(''.join(get_arp_table()[0]['HW address'].split(':')))
@@ -38,15 +40,18 @@ def recebeMensagem():
     f.close()
     return msg
 
+# recebendo ip do servidor
+if len(sys.argv) != 2:
+    print 'Uso: python ' + sys.argv[0] + ' [ip_servidor]'
+    sys.exit()
+host = sys.argv[1]     # Get local machine name
+
 # configurando socket para ouvir camada superior 
-port_superior = 10000                  # Reserve a port for your service.
+port_superior = 10001                  # Reserve a port for your service.
 s_superior = socket.socket()             # Create a socket object
 host = 'localhost'     # Get local machine name
-                
-    
-s_superior.bind((host, port_superior))            # Bind to the port
+s_superior.bind(('localhost', port_superior))            # Bind to the port
 s_superior.listen(5)                     # Escutando camada superior.
-   
 
 while True:
     # Comunicacao camada superior -> fisica -> servidor fisica
@@ -60,7 +65,8 @@ while True:
     g.write('Estabeleceu conexao com a camada superior ' + str(addr_superior) + '[' + str(datetime.datetime.now()) + ']' + '\n')
           
     msg = conn_superior.recv(40) # recebendo mensagem da camada superior
-    print "msg da camada superior:" + msg
+    g.write('Recebeu mensagem da camada superior [' + str(datetime.datetime.now()) + ']' + '\n')
+            
         
     # converte para binario
     msg_bin = stringToBin(msg)
@@ -75,7 +81,6 @@ while True:
 
     # configurando socket para enviar mensagem para o servidor da fisica
     s = socket.socket()             # Create a socket object
-    host = socket.gethostname()     # Get local machine name
     port = 10200                     # Reserve a port for your service.
 
     s.connect((host, port))
@@ -129,7 +134,7 @@ while True:
     # exibir PDU
     print "Processando PDU da camada Fisica"
     exibePDU(data[:5])
-    
+
     msg_bin = data[5]
     msg = binToString(msg_bin)
     with open('rf.txt', 'wb') as f:
