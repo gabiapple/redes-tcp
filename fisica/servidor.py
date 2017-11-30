@@ -8,7 +8,7 @@ import sys
 
 from python_arptable import get_arp_table
 from socket import timeout
-import fcntl, socket, struct
+from uuid import getnode as get_mac
 
 def stringToBin(msg):
     data_binary = bin(int(binascii.hexlify(msg),16)).split('b')
@@ -30,16 +30,10 @@ def exibePDU(pdu):
 # https://github.com/LukeCSmith0/hyperspeed-tester/blob/master/Client-Script/execute_test_final.py
 # https://stackoverflow.com/questions/159137/getting-mac-address
 def calculaMAC(ip):
-    if ip == 'localhost':
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        info = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', interface[:15]))
-        gateway_mac = ':'.join(['%02x' % ord(char) for char in info[18:24]])
-        return gateway_mac
-   
     os.system("ping -c 2 " + ip)
     ##Import the contents of the ARP table for reading
     arp_table = get_arp_table()
-    gateway_mac = '0'
+    gateway_mac = '00:00:00:00:00:00'
     ##Loop through each ARP entry to check whether the gateway address is present
     for arp_entry in arp_table:
         if arp_entry['IP address'] ==  str(ip):
@@ -54,8 +48,11 @@ def criaFrame(msg):
     print "Gerando PDU da camada fisica"
     preambulo = '10101010101010101010101010101010101010101010101010101010'
     start_frame = '10101011'
-    mac_orig = calculaMAC('localhost') # MAC do servidor local
-    mac_dest = calculaMAC(ip_cliente) # MAC do cliente
+    mac_orig = ':'.join(("%012x" % get_mac())[i:i+2] for i in range(0, 12, 2)) # MAC do servidor
+    if ip_cliente != 'localhost':
+        mac_dest = calculaMAC(ip_cliente) # MAC do cliente
+    else:
+        mac_dest = mac_orig
     tipo = '0000000011111111'
     frame = ""
     frame += preambulo + '\n' + start_frame + '\n' + mac_orig + '\n' + mac_dest + '\n' + tipo + '\n' + msg[1]
@@ -70,13 +67,12 @@ def recebeMensagem():
     return msg
 
 # recebendo ip do servidor
-if len(sys.argv) != 4:
-    print 'Uso: python ' + sys.argv[0] + ' [interface] [ip_servidor] [ip_cliente]'
+if len(sys.argv) != 3:
+    print 'Uso: python ' + sys.argv[0] + ' [ip_servidor] [ip_cliente]'
     sys.exit()
 
-interface = sys.argv[1]
-host = sys.argv[2]     # Get local machine name
-ip_cliente = sys.argv[3]
+host = sys.argv[1]     # Get local machine name
+ip_cliente = sys.argv[2]
 
 # configurando socket para se comunicar com cliente
 port = 10200                 # Reserve a port for your service.
