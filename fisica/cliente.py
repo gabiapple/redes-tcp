@@ -49,7 +49,7 @@ host = sys.argv[1]     # Get local machine name
 # configurando socket para ouvir camada superior 
 port_superior = 10001                  # Reserve a port for your service.
 s_superior = socket.socket()             # Create a socket object
-host = 'localhost'     # Get local machine name
+host_superior = 'localhost'     # Get local machine name
 s_superior.bind(('localhost', port_superior))            # Bind to the port
 s_superior.listen(5)                     # Escutando camada superior.
 
