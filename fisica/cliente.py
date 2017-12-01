@@ -21,6 +21,7 @@ def exibePDU(pdu):
     print "MAC ORIGEM: " +  pdu[2]
     print "MAC DESTINO: " +  pdu[3]
     print "TIPO: " +  str(int(pdu[4],2))
+    print "------------------------------"
 
 # Referencias consultadas para achar MAC_ADRESS:
 # https://github.com/LukeCSmith0/hyperspeed-tester/blob/master/Client-Script/execute_test_final.py
@@ -41,7 +42,7 @@ def calculaMAC(ip):
     return gateway_mac
 
 def criaFrame(msg):
-    print "Gerando PDU da camada fisica"
+    print "------------------------------\nGerando PDU da camada fisica"
     preambulo = '10101010101010101010101010101010101010101010101010101010'
     start_frame = '10101011'
     mac_orig = ':'.join(("%012x" % get_mac())[i:i+2] for i in range(0, 12, 2)) # MAC do cliente
@@ -156,7 +157,7 @@ while True:
     data = frame.split('\n')
 
     # exibir PDU
-    print "Processando PDU da camada Fisica"
+    print "------------------------------\nProcessando PDU da camada Fisica"
     exibePDU(data[:5])
 
     msg_bin = data[5]

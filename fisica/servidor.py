@@ -25,6 +25,7 @@ def exibePDU(pdu):
     print "MAC ORIGEM: " +  pdu[2]
     print "MAC DESTINO: " +  pdu[3]
     print "TIPO: " +  str(int(pdu[4],2))
+    print "------------------------------"
 
 # Referencias consultadas para achar MAC_ADRESS:
 # https://github.com/LukeCSmith0/hyperspeed-tester/blob/master/Client-Script/execute_test_final.py
@@ -45,7 +46,7 @@ def calculaMAC(ip):
     return gateway_mac
 
 def criaFrame(msg):
-    print "Gerando PDU da camada fisica"
+    print "------------------------------\nGerando PDU da camada fisica"
     preambulo = '10101010101010101010101010101010101010101010101010101010'
     start_frame = '10101011'
     mac_orig = ':'.join(("%012x" % get_mac())[i:i+2] for i in range(0, 12, 2)) # MAC do servidor
@@ -115,13 +116,12 @@ while True:
     data = frame.split('\n')
 
     # exibir PDU
-    print "Processando PDU da camada Fisica"
+    print "------------------------------\nProcessando PDU da camada Fisica"
     exibePDU(data[:5])
 
     msg_bin = data[5]
     msg = binToString(msg_bin)
-    print msg
-
+    
     # configurando socket para conversar com o servidor da camada superior
     server = socket.socket()         # Create a socket object
     host_superior = 'localhost' # Get local machine name
@@ -129,7 +129,6 @@ while True:
  
     # estabelecendo conexao
     server.connect((host_superior, port_superior))
-    #print server.recv(1024)
     j.write('Estabeleceu conexao com servidor da camada superior: ' + str(addr) + '[' + str(datetime.datetime.now()) + ']' + '\n')
  
     # envia mensagem
@@ -138,7 +137,6 @@ while True:
 
     # recebe resposta
     msg = server.recv(1024)
-    print 'Resposta do servidor de app: ' + msg
     j.write('Recebeu resposta do servidor da camada superior [' + str(datetime.datetime.now()) + ']' + '\n\n')
     server.close()
     j.write('Conexao encerrada [' + str(datetime.datetime.now()) + ']' + '\n\n')

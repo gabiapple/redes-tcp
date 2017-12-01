@@ -22,7 +22,6 @@ loop{
 	
 	puts "request: " + request
 	part = request.split(' ')
-	puts 'part[2]: ' + part[2] + '\n'
 	print "Gerando PDU da aplicacao:\n"
 	
 	case part[1]

@@ -6,8 +6,8 @@ $ack;
 $window = 1000000000;
 
 function exibePDU($pdu, $protocolo){
-    echo "Porta origem $pdu[0]\n";
-    echo "Porta destino $pdu[1]\n";
+    echo "Porta origem: $pdu[0]\n";
+    echo "Porta destino: $pdu[1]\n";
     if($protocolo == 'udp')
         echo "Tamanho: $pdu[2]\n";
     else{
@@ -15,11 +15,13 @@ function exibePDU($pdu, $protocolo){
         echo "ACK: $pdu[3]\n";
         echo "Window: $pdu[4]\n";
     }
+    echo "--------------------------------------\n";
 }
 
 function criaSegmentoUDP($porta_origem, $porta_destino,$mensagem){
     $length = sizeof($porta_origem) + sizeof($porta_destino) +  sizeof($mensagem);
     $segmento = $porta_origem."\n".$porta_destino."\n".$length."\n".$mensagem;
+    echo "--------------------------------------\nGerando PDU da camada de transporte\n";
     exibePDU(explode("\n",$segmento),'udp');
     return $segmento;
 }
@@ -29,6 +31,7 @@ function criaSegmentoTCP($porta_origem, $porta_destino,$mensagem){
     $seq++;
     $ack = strlen($mensagem);
     $segmento = $porta_origem."\n".$porta_destino."\n".$seq."\n".$ack."\n".$window."\n".$mensagem;
+    echo "--------------------------------------\nGerando PDU da camada de transporte\n";
     exibePDU(explode("\n",$segmento),'tcp');
     return $segmento;
 }
@@ -42,7 +45,6 @@ socket_bind($camada_superior, $host, $port1);
 
 //Espera por conexão ("ouve" o meio)
 socket_listen($camada_superior, SOMAXCONN);
-//echo "Esperando um cliente...\n";
 
 //Aceita a conexão do cliente, se e enquanto for possível
 $conn_superior;
@@ -58,15 +60,13 @@ $window = $lim_bytes;
 const log = " log_cTrans";
 $arquivo = fopen(log, "w") or die("Unable to open file!");
 
-#criaSegmentoUDP("sajdfkaljfksa");
-#exit();
-
 while (1) {
     echo "Esperando um cliente...\n";  
     fwrite($arquivo," Espera por cliente aplicacao   "  );
     fwrite($arquivo, date('m/d/Y h:i:s a', time()) );	
     //Conectando com a camada superior
     while(($conn_superior = socket_accept($camada_superior)) != FALSE) {
+        echo "Recebeu requisição\n";
         fwrite($arquivo,"\n Recebe requisicao de aplicacao    "  );
         fwrite($arquivo, date('m/d/Y h:i:s a', time()) );
 
@@ -74,7 +74,6 @@ while (1) {
         //Perceba que há um limite de bytes a serem lidos
         echo "Servidor iniciado!\n";
         $sequencia_de_bytes = socket_read($conn_superior, $lim_bytes, PHP_BINARY_READ);
-        echo "MSG: $sequencia_de_bytes\n";
         fwrite($arquivo,"\n Recebe dados de aplicacao   "  );
         fwrite($arquivo, date('m/d/Y h:i:s a', time()) );
 
@@ -112,8 +111,8 @@ while (1) {
         fwrite($arquivo,"\n Recebe da fisica   "  );
         fwrite($arquivo, date('m/d/Y h:i:s a', time()) );
 
-        echo $sequencia_de_bytes_retorno_do_server;
         $pdu = explode("\n",$sequencia_de_bytes_retorno_do_server);
+        echo "--------------------------------------\nProcessando PDU da camada de transporte\n";
         exibePDU($pdu,'tcp');
         $resposta = implode("\n",array_slice($pdu, 5));
 
