@@ -1,26 +1,46 @@
 <?php
-    $host = "localhost";
-    $port1 = "10000";
-    $aragorn = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-    $lim_bytes = 1000000000; //1 GB
+$host = "localhost";
+$port1 = "10000";
+$aragorn = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+$lim_bytes = 1000000000; //1 GB
 
-    //Atribui-se uma identidade ao servidor
-    socket_bind($aragorn, $host, $port1);
+//Atribui-se uma identidade ao servidor
+socket_bind($aragorn, $host, $port1);
 
-    //Espera por conexão ("ouve" o meio)
-    socket_listen($aragorn, SOMAXCONN);
-    //echo "Esperando um cliente...\n";
+//Espera por conexão ("ouve" o meio)
+socket_listen($aragorn, SOMAXCONN);
+//echo "Esperando um cliente...\n";
 
-    //Aceita a conexão do cliente, se e enquanto for possível
-    $frodo;
-    $anel;
-    $sequencia_de_bytes;
-    $sequencia_de_bytes_retorno_do_server;
-    $keep_going;
+//Aceita a conexão do cliente, se e enquanto for possível
+$frodo;
+$anel;
+$sequencia_de_bytes;
+$sequencia_de_bytes_retorno_do_server;
+$keep_going;
+#p
 
-    const log = " log_cTrans";
-    $arquivo = fopen(log, "w") or die("Unable to open file!");
+const log = " log_cTrans";
+$arquivo = fopen(log, "w") or die("Unable to open file!");
 
+function exibePDU($segmento){
+    $pdu = explode("\n",$segmento);
+    echo "Porta origem $pdu[0]\n";
+    echo "Porta destino $pdu[1]\n";
+    echo "Tamanho: $pdu[2]\n";
+}
+
+function criaSegmentoUDP($mensagem){
+    $porta_origem = getmypid();
+    $porta_destino = 8001;
+    $length = sizeof($porta_origem) + sizeof($porta_destino) +  sizeof($mensagem);
+    $segmento = $porta_origem."\n".$porta_destino."\n".$length;
+    exibePDU($segmento);
+    return $segmento;
+   
+}
+
+criaSegmentoUDP("sajdfkaljfksa");
+#exit();
 
 while (1) {
     echo "Esperando um cliente...\n";  

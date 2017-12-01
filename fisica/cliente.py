@@ -4,6 +4,7 @@ import binascii
 import datetime
 import sys
 from python_arptable import *
+from uuid import getnode as get_mac
 
 def stringToBin(msg):
     data_binary = bin(int(binascii.hexlify(msg),16)).split('b')
@@ -17,19 +18,40 @@ def binToString(data_binary):
 def exibePDU(pdu):
     print "Preambulo: " + str(int(pdu[0],2))
     print "Start_frame: " +  str(int(pdu[1],2))
-    print "MAC ORIGEM: " +  binToString(pdu[2])
-    print "MAC DESTINO: " +  binToString(pdu[3])
+    print "MAC ORIGEM: " +  pdu[2]
+    print "MAC DESTINO: " +  pdu[3]
     print "TIPO: " +  str(int(pdu[4],2))
+
+# Referencias consultadas para achar MAC_ADRESS:
+# https://github.com/LukeCSmith0/hyperspeed-tester/blob/master/Client-Script/execute_test_final.py
+# https://stackoverflow.com/questions/159137/getting-mac-address
+def calculaMAC(ip):
+    os.system("ping -c 2 " + ip)
+    ##Import the contents of the ARP table for reading
+    arp_table = get_arp_table()
+    gateway_mac = '00:00:00:00:00:00'
+    ##Loop through each ARP entry to check whether the gateway address is present
+    for arp_entry in arp_table:
+        if arp_entry['IP address'] ==  str(ip):
+            ##Grab the MAC address associated with the gateway address
+            gateway_mac = str(arp_entry['HW address'])
+            print gateway_mac
+            break;
+
+    return gateway_mac
 
 def criaFrame(msg):
     print "Gerando PDU da camada fisica"
     preambulo = '10101010101010101010101010101010101010101010101010101010'
     start_frame = '10101011'
-    mac_orig = stringToBin(''.join(get_arp_table()[0]['HW address'].split(':')))
-    mac_dest = stringToBin(''.join(get_arp_table()[0]['HW address'].split(':')))
+    mac_orig = ':'.join(("%012x" % get_mac())[i:i+2] for i in range(0, 12, 2)) # MAC do cliente
+    if ip_servidor != 'localhost':
+        mac_dest = calculaMAC(ip_servidor) # MAC do servidor
+    else:
+        mac_dest = mac_orig
     tipo = '0000000011111111'
     frame = ""
-    frame += preambulo + '\n' + start_frame + '\n' + mac_orig[1] + '\n' + mac_dest[1] + '\n' + tipo + '\n' + msg[1] + '\n'
+    frame += preambulo + '\n' + start_frame + '\n' + mac_orig + '\n' + mac_dest + '\n' + tipo + '\n' + msg[1]
     exibePDU(frame.split('\n'))
     return frame
 
@@ -41,15 +63,17 @@ def recebeMensagem():
     return msg
 
 # recebendo ip do servidor
-if len(sys.argv) != 2:
-    print 'Uso: python ' + sys.argv[0] + ' [ip_servidor]'
+if len(sys.argv) != 3:
+    print 'Uso: python ' + sys.argv[0] + ' [ip_servidor] [ip_cliente]'
     sys.exit()
-host = sys.argv[1]     # Get local machine name
+
+ip_servidor = sys.argv[1]
+host = sys.argv[2]     # Get local machine name
 
 # configurando socket para ouvir camada superior 
 port_superior = 10001                  # Reserve a port for your service.
 s_superior = socket.socket()             # Create a socket object
-host = 'localhost'     # Get local machine name
+host_superior = 'localhost'     # Get local machine name
 s_superior.bind(('localhost', port_superior))            # Bind to the port
 s_superior.listen(5)                     # Escutando camada superior.
 
@@ -83,7 +107,7 @@ while True:
     s = socket.socket()             # Create a socket object
     port = 10200                     # Reserve a port for your service.
 
-    s.connect((host, port))
+    s.connect((ip_servidor, port))
 
     g.write('Estabelece conexao com Servidor da Fisica [' + str(datetime.datetime.now()) + ']' + '\n')
 
