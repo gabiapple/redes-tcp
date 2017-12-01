@@ -5,7 +5,7 @@
 require 'socket'
 require 'time'
 
-server = TCPServer.new 8001
+server = TCPServer.new 10006
 
 begin
 	displayfile = File.open("index.html", 'r')

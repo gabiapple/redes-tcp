@@ -88,7 +88,7 @@ while True:
     conn_superior, addr_superior = s_superior.accept()     # Establish connection with client.
     g.write('Estabeleceu conexao com a camada superior ' + str(addr_superior) + '[' + str(datetime.datetime.now()) + ']' + '\n')
           
-    msg = conn_superior.recv(40) # recebendo mensagem da camada superior
+    msg = conn_superior.recv(100) # recebendo mensagem da camada superior
     g.write('Recebeu mensagem da camada superior [' + str(datetime.datetime.now()) + ']' + '\n')
             
         
