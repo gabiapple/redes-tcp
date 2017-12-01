@@ -26,12 +26,12 @@ $ sudo pip install python_arptable
 ### Execução
 Após os comandos acima já é possível executar o servidor.py e o cliente.py:
 ```
-$ python servidor.py [ip_servidor]
+$ python servidor.py [ip_servidor] [ip_cliente]
 ```
 ```
-$ python cliente.py [ip_servidor]
+$ python cliente.py [ip_servidor] [ip_cliente]
 ```
-Observe que é necessário passar como parâmetro qual o IP da máquina que atua como servidor.
+Observe que é necessário passar, o ip do servidor e ip do cliente como parâmetro para execução da camada física.
 
 ## Camada de Aplicação
 A camada física foi implementada na linguagem Ruby 1.9.3

@@ -46,7 +46,7 @@ while (1) {
             break;
         */
         //iniciando cliente que irá se comunicar com a camada inferior
-        $port2 = 10006;
+        $port2 = 8001;
         //Abre-se e faz o teste do socket
         $saruman = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         echo "teste transporte 3\n";
